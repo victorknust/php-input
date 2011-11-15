@@ -111,21 +111,20 @@ class Input {
 		return($string);
 	}
 	
+	public function CleanSQL($string) {
+                $string = mainframe::Init("input__filter")->safeSQL($string);
+                return($string);
+        }
+	
 	// Validate string
-	public function Validate($string,$what,$allowempty=FALSE,$clean=FALSE) {
+	public function Validate($string,$what,$allowempty=FALSE,$cleansql=FALSE) {
 		
-		if($clean == TRUE) {
-			$string = $this->Clean($string);
-		}
+		$string = $this->Clean($string);
 		
-		if(empty($string)) {
-			if($allowempty==TRUE) {
-				return(TRUE);
-			} else if($allowempty==FALSE) {
-				return(FALSE);
-			}
-		}
+		if($cleansql == TRUE) $string = $this->CleanSQL($string);
 		
+		if(empty($string)) return($allowempty);
+			
 		$name = "is_".$what;
 		if(is_callable(array($this,$name))) {
 			if($this->$name($string)==TRUE) {
