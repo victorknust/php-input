@@ -3,9 +3,10 @@
 class Input {
 
 	// Input validation and normalisation
-	
+	private $string;
+
 	public function __construct() {
-	
+		
 		$vars = array("_GET","_POST","_SESSION","_SERVER","_ENV","_COOKIE");
 		for($i=0; $i < count($vars); $i++) {
 			$var = $vars[$i];
@@ -13,6 +14,7 @@ class Input {
 				$$var = MainFrame::Init("input__filter")->process($$var);
 			}
 		}
+		
 	}
 	
 	public function __destruct() { }
@@ -105,44 +107,79 @@ class Input {
 		return(false);
 	}
 	
-	// Clean string
-	public function Clean($string) {
+	private function Clean($string) {
 		$string = MainFrame::Init("input__filter")->process($string);
 		return($string);
 	}
-	
-	public function CleanSQL($string) {
-                $string = mainframe::Init("input__filter")->safeSQL($string);
-                return($string);
-        }
-	
-	// Validate string
-	public function Validate($string,$what,$allowempty=FALSE,$cleansql=FALSE) {
-		
-		$string = $this->Clean($string);
-		
-		if($cleansql == TRUE) $string = $this->CleanSQL($string);
-		
-		if(empty($string)) return($allowempty);
-			
-		$name = "is_".$what;
-		if(is_callable(array($this,$name))) {
-			if($this->$name($string)==TRUE) {
-				return($string);
-			} else { 
-				return(FALSE);
-			}
-		} else if(function_exists($name)) {
-			if($name($string)==TRUE) {
-				return($string);
-			} else {
-				return(FALSE);
-			}
-		} else {
-			return(FALSE);
-		}
+
+	/* Validation functions */
+
+	/* Clean string of any Sql injection stuff */
+	public function CleanSQL() {
+                $this->string = mainframe::Init("input__filter")->safeSQL($this->string);
+                return($this);
 	}
 	
+	/* Check if a string is empty */
+	public function AllowEmpty($allow) {
+		
+		if($this->string != FALSE) {
+			if(empty($this->string) && $allow == FALSE) {
+				$this->string = FALSE;
+			}
+		}
+		
+		return $this;
+	}
+
+	/* Check for Minimal Length */
+	public function MinLength($length) {
+	
+		if($this->string != FALSE) {
+			if(strlen($this->string) < $length) {
+				$this->string = FALSE;
+			}
+		}
+		
+		return $this;
+	}
+
+	/* Check for maxmimal length */
+	public function MaxLength($length) {
+		
+		if($this->string != FALSE) {
+			if(strlen($this->string) > $length) {
+				$this->string = FALSE;
+			}
+		}
+		
+		return $this;
+	}
+
+	/* Validate string */
+	public function Validate($string, $what) {
+
+		$this->string = $string;
+		$this->string = $this->Clean($this->string);
+		
+		$name = "is_".$what;
+		if(is_callable(array($this,$name))) {
+			if($this->$name($this->string)==FALSE) {
+				$this->string = FALSE;
+			}
+		} else if(function_exists($name)) {
+			if($name($this->string)==FALSE) {
+				$this->string = FALSE;
+			}
+		} else {
+			$this->string = FALSE;
+		}
+		return $this;
+	}
+
+	public function Process() {
+		return($this->string);
+	}
 }
 
 ?>
