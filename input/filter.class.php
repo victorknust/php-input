@@ -162,8 +162,8 @@ public function construct() { }
         return $source;
     }
     protected function escapeString($string, &$connection) {
-        if (version_compare(phpversion(),"4.3.0", "<")) mysql_escape_string($string);
-        else mysql_real_escape_string($string);
+        if (version_compare(phpversion(),"4.3.0", "<")) $string = mysql_escape_string($string);
+        else $string = mysql_real_escape_string($string, $connection);
         return $string;
     }
 }
